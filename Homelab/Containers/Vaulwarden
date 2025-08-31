@@ -1,0 +1,103 @@
+# 🛠️ Vaultwarden Installation Guide (Docker)
+
+## 1. **System Requirements**
+
+- A Linux server (Debian/Ubuntu recommended)
+- Docker & Docker Compose installed
+- Basic shell access
+
+## 2. **Create Vaultwarden Directory**
+
+```bash
+mkdir -p ~/vaultwarden
+cd ~/vaultwarden
+```
+
+## 3. **Create `docker-compose.yml`**
+
+```yaml
+version: '3'
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./vw-data:/data
+    environment:
+      WEBSOCKET_ENABLED: "true"
+      SIGNUPS_ALLOWED: "false"  # Set to "true" if you want open registration
+```
+
+## 4. **Start Vaultwarden**
+
+```bash
+docker compose up -d
+```
+
+Vaultwarden will now be running at `http://your-server-ip:8080`.
+
+---
+
+## 🧾 Backup Script for Hidden Config Files
+
+Vaultwarden stores its config and database in the `vw-data` volume. Here’s a script to back up everything, including hidden files like `.env` or `.sqlite3` files.
+
+### 🔐 `backup-vaultwarden.sh`
+
+```bash
+#!/bin/bash
+
+# === CONFIG ===
+BACKUP_DIR="$HOME/vaultwarden-backups"
+DATA_DIR="$HOME/vaultwarden/vw-data"
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+ARCHIVE_NAME="vaultwarden_backup_$TIMESTAMP.tar.gz"
+
+# === CREATE BACKUP DIR ===
+mkdir -p "$BACKUP_DIR"
+
+# === BACKUP ===
+tar -czvf "$BACKUP_DIR/$ARCHIVE_NAME" -C "$DATA_DIR" .
+
+# === OPTIONAL: Prune old backups (keep last 5) ===
+cd "$BACKUP_DIR"
+ls -tp | grep -v '/$' | tail -n +6 | xargs -I {} rm -- {}
+
+echo "✅ Backup complete: $ARCHIVE_NAME"
+```
+
+### 🧪 Make It Executable
+
+```bash
+chmod +x backup-vaultwarden.sh
+```
+
+### 🕒 Automate with Cron (Optional)
+
+```bash
+crontab -e
+```
+
+Add:
+
+```bash
+0 2 * * * /home/thierry/backup-vaultwarden.sh >> /home/thierry/vaultwarden-backups/backup.log 2>&1
+```
+
+This runs the backup daily at 2 AM.
+
+---
+
+## 🧠 Pro Tips
+
+- Use `SIGNUPS_ALLOWED=true` only during initial setup, then disable it.
+- Consider adding HTTPS via a reverse proxy like **Caddy** or **Traefik**.
+- Store backups offsite or sync to cloud storage (e.g., via `rclone`).
+
+---
+
+Want help setting up Caddy for HTTPS or integrating with systemd for better service management? I can walk you through that next.

@@ -1,0 +1,13 @@
+# Touchscreen not working anymore
+
+If your touchscreen stops responding, a simple reboot is not enough to clear the issue. However, you can reset the touchscreen by putting the Steam Deck into battery storage mode:
+
+* Power the Steam Deck down normally (choose Shut Down from the Power menu)
+* Hold down the Volume+ button and press the power button. The Steam Deck should boot into the BIOS menu.
+* Using the D-Pad and A to select, navigate to "Setup Utility"
+* Navigate to the Power Menu
+* Choose Battery storage mode, and confirm.
+
+You should see the Steam Deck power off, and the power LED will blink three times to confirm battery storage mode.
+
+Wait a few minutes, then plug the Steam Deck in to the provided power supply and turn on the Steam Deck.
