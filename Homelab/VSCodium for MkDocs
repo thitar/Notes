@@ -1,0 +1,160 @@
+# VSCodium for MkDocs: Remote Editing & Git Workflow Guide
+
+Download this guide as a reference for setting up VSCodium to edit your MkDocs site on a remote host (`docker`), preview changes live, and commit/push via Git.
+
+---
+
+## Prerequisites
+
+- VSCodium installed on your local machine  
+- SSH key pair configured (`~/.ssh/id_rsa` + `~/.ssh/id_rsa.pub`)  
+- Remote host alias `docker` defined in `~/.ssh/config`  
+- MkDocs and your documentation repo already on `docker`
+
+---
+
+## 1. Configure SSH for `docker`
+
+1. Open (or create) your SSH config:
+
+   ```bash
+   code ~/.ssh/config
+   ```
+
+2. Add an entry for `docker`:
+
+   ```ini
+   Host docker
+     HostName 192.168.1.50      # replace with your host IP or DNS
+     User thitar               # your remote username
+     IdentityFile ~/.ssh/id_rsa
+   ```
+
+3. Test the connection:
+
+   ```bash
+   ssh docker
+   ```
+
+---
+
+## 2. Install Remote-SSH in VSCodium
+
+1. Launch VSCodium.
+2. Open the Extensions sidebar (`Ctrl+Shift+X`).
+3. Search for **Remote - SSH** and install it.  
+4. (Optional) Install **GitLens** and **Markdown All in One** for richer Git and Markdown support.
+
+---
+
+## 3. Connect to the Remote Host
+
+1. Press `F1`, type `Remote-SSH: Connect to Host…` and select `docker`.  
+2. A new VSCodium window opens, connected to `docker`.  
+3. Use `File → Open Folder…` to navigate to your MkDocs project root (e.g., `~/homelab`).
+
+---
+
+## 4. Set Up an MkDocs Workspace
+
+### 4.1 Create a `.code-workspace` File
+
+In your project root, create `mkdocs.code-workspace`:
+
+```json
+{
+  "folders": [
+    { "path": "." }
+  ],
+  "settings": {
+    "markdown.preview.openMarkdownLinks": "inPreview",
+    "yaml.validate": true,
+    "yaml.schemas": {
+      "file:///home/thitar/homelab/mkdocs.yml": "mkdocs.yml"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "yzhang.markdown-all-in-one",
+      "redhat.vscode-yaml",
+      "eemeli.markdownlint",
+      "eamodio.gitlens"
+    ]
+  }
+}
+```
+
+### 4.2 Install Recommended Extensions
+
+When you open the workspace, VSCodium will prompt you to install the recommended extensions. Click **Install All**.
+
+### 4.3 Configure Port Forwarding
+
+1. In the Remote window’s status bar, click the `><` icon for **Forwarded Ports**.  
+2. Add port `8000`→`8000` so `mkdocs serve` on the remote becomes `http://localhost:8000` locally.
+
+### 4.4 Define a Preview Task
+
+Create `.vscode/tasks.json`:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Serve MkDocs",
+      "type": "shell",
+      "command": "mkdocs serve --dev-addr=0.0.0.0:8000",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "mkdocs",
+          "pattern": { "regexp": ".+" },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Building documentation",
+            "endsPattern": "Serving on"
+          }
+        }
+      ],
+      "presentation": { "reveal": "always" }
+    }
+  ]
+}
+```
+
+Run it with `Terminal → Run Task… → Serve MkDocs`.
+
+---
+
+## 5. Editing & Live Preview
+
+- Open any `.md` file.  
+- Toggle the side-by-side preview: `Ctrl+K V`.  
+- As you save, MkDocs rebuilds and you see changes at `http://localhost:8000`.
+
+---
+
+## 6. Commit & Push via VSCodium
+
+1. Switch to the **Source Control** view (`Ctrl+Shift+G`).  
+2. Stage files by clicking the **+** next to each change (or **Stage All**).  
+3. Type your commit message in the box at the top.  
+4. Click the checkmark to **Commit**.  
+5. Click the “···” menu → **Push** (or run `Git: Push` via `F1`).
+
+---
+
+## 7. Bonus Tips
+
+- Add a `.vscode/settings.json` to enforce Markdown linting rules across your team.  
+- Use Material for MkDocs themes by installing the `material` PyPI package and enabling the extra Markdown extension in your workspace settings.  
+- Automate deployment with a GitHub Actions workflow that runs `mkdocs build` on push.
+
+---
+
+More to Explore  
+
+- Integrating Mermaid diagrams with `mike` versioning  
+- Setting up Netlify previews for pull requests  
+- Managing multiple MkDocs versions in one repo
